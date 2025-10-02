@@ -1,5 +1,3 @@
-# --- БАЗА ЗНАНИЙ С ШАБЛОННЫМИ ОТВЕТАМИ (ОЧИЩЕННАЯ) ---
-
 TEMPLATES = {
     "ru": {
         "question": {
@@ -34,36 +32,26 @@ TEMPLATES = {
     "default": "Спасибо за ваше обращение! Thank you for your message!"
 }
 
-# --- ГЛАВНАЯ ФУНКЦИЯ ГЕНЕРАЦИИ ОТВЕТА ---
 
 def generate_response(analysis_result: dict) -> str:
-    """
-    Выбирает подходящий шаблонный ответ на основе полного анализа комментария.
-    """
     lang = analysis_result.get('language')
     moderation_verdict = analysis_result.get('moderation_verdict')
     comment_type = analysis_result.get('comment_type')
     original_text = analysis_result.get('text', '').lower()
 
-    # 1. Сначала обрабатываем вердикт модерации
     if moderation_verdict in ['spam', 'insult']:
-        # Используем .get() для безопасного извлечения, чтобы избежать ошибок
         return TEMPLATES.get(lang, {}).get(moderation_verdict, TEMPLATES['default'])
 
-    # 2. Если все в порядке, обрабатываем по типу комментария
     if lang in TEMPLATES:
         lang_templates = TEMPLATES[lang]
         
         if comment_type == 'question':
-            # "Умный" поиск ответа на вопрос по ключевым словам
             for keyword, answer in lang_templates.get('question', {}).items():
                 if keyword in original_text:
                     return answer
-            # Если ключевых слов не найдено, возвращаем ответ по умолчанию для вопроса
             return lang_templates.get('question', {}).get('default')
         
-        # Для остальных типов просто возвращаем соответствующий шаблон
         return lang_templates.get(comment_type, lang_templates.get('feedback'))
 
-    # 3. Если язык не поддерживается, возвращаем ответ по умолчанию
+
     return TEMPLATES['default']
