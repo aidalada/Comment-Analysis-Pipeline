@@ -1,8 +1,6 @@
 import re
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 
-print("Загрузка моделей... Это может занять несколько минут.")
-
 language_detector = pipeline('text-classification', model='papluca/xlm-roberta-base-language-detection')
 
 translator_tokenizer = AutoTokenizer.from_pretrained("facebook/nllb-200-distilled-600M")
@@ -16,24 +14,21 @@ en_sentiment_classifier = pipeline('sentiment-analysis', model='distilbert-base-
 
 zero_shot_classifier = pipeline("zero-shot-classification", model="MoritzLaurer/mDeBERTa-v3-base-mnli-xnli")
 
-print("Все рабочие модели успешно загружены!")
+print("All models are succesfully loaded")
 
 SPAM_MARKERS = {"подпис", "канал", "заход", "переход", "профил", "ссылк", "заработ", "крипт"}
 URL_PATTERN = re.compile(r'https?://\S+|www\.\S+')
 
 
 def clean_text(text: str) -> str:
-    """Очищает текст от эмодзи и большинства символов."""
     text = re.sub(r'[^\w\s]', '', text)
     return " ".join(text.split())
 
 def is_kazakh(text: str) -> bool:
-    """Проверяет наличие уникальных казахских букв в тексте."""
     KAZAKH_CHARS = set("ӘәҒғҚқҢңӨөҰұҮүҺһІі")
     return any(char in KAZAKH_CHARS for char in text)
 
 def translate_to_russian(text: str, src_lang_code: str = "kaz_Cyrl") -> str:
-    """Переводит текст на русский с помощью модели NLLB."""
     try:
         translator_tokenizer.src_lang = src_lang_code
         encoded_text = translator_tokenizer(text, return_tensors="pt")
@@ -45,7 +40,6 @@ def translate_to_russian(text: str, src_lang_code: str = "kaz_Cyrl") -> str:
         return text
 
 def detect_spam_by_rules(text: str) -> bool:
-    """Проверяет текст на наличие явных признаков спама."""
     text_lower = text.lower()
     if URL_PATTERN.search(text_lower):
         return True
@@ -54,7 +48,6 @@ def detect_spam_by_rules(text: str) -> bool:
     return False
 
 def get_moderation_verdict(text: str, language: str) -> str:
-    """Определяет вердикт модерации: spam, insult или ok."""
     if detect_spam_by_rules(text):
         return 'spam'
     
@@ -69,10 +62,6 @@ def get_moderation_verdict(text: str, language: str) -> str:
 
 
 def analyze_comment(comment_text: str) -> dict:
-    """
-    Полностью анализирует комментарий: очищает, определяет язык, модерирует,
-    переводит при необходимости, определяет тональность и тип.
-    """
     cleaned_text = clean_text(comment_text)
     if not cleaned_text:
         return {
@@ -125,4 +114,5 @@ def analyze_comment(comment_text: str) -> dict:
     }
     return final_analysis
 
-print("\n✅ Аналитический модуль готов к работе!")
+
+print("\nAnalytic module is ready")
